@@ -1,52 +1,43 @@
-# 🌾 Granito — Donaciones pequeñas, impacto grande
+# Granito — MVP de microdonaciones
 
-![Estado del Proyecto](https://img.shields.io/badge/Estado-MVP%20Demo-brightgreen)
-![Materia](https://img.shields.io/badge/Materia-An%C3%A1lisis%20y%20Dise%C3%B1o%20de%20Software-blue)
-![Universidad](https://img.shields.io/badge/UPChiapas-2026-orange)
+Prototipo funcional para demo: registro, campañas ficticias, monedero con Stripe Checkout en modo prueba, donaciones atómicas y comprobantes simples.
 
-> **Granito** es una plataforma web de microdonaciones que permite apoyar causas de organizaciones verificadas con montos pequeños ($5, $10 o $20 MXN) mediante **donación en un solo clic** y transparencia en tiempo real.
+## Requisitos
 
----
+- Node.js 18+ y PostgreSQL 14+
+- Una cuenta de Stripe en modo de prueba
 
-## 🚀 Funcionalidades Principales (MVP)
+## Inicio local
 
-- 🔐 **Registro e Inicio de Sesión:** Autenticación de usuarios mediante JWT y encriptación de contraseñas con Bcrypt.
-- 📋 **Lista de Campañas:** Visualización de causas activas con imagen, meta, monto recaudado y barra de progreso dinámica.
-- 💳 **Monedero Virtual & Saldo:** Control de saldo disponible por usuario para realizar microdonaciones instantáneas.
-- ⚡ **Donación de 1-Clic:** Donación instantánea ($5, $10, $20 MXN) utilizando transacciones SQL atómicas para descontar saldo y actualizar el avance de la campaña en vivo.
-- 🔌 **API REST Integrada:** Arquitectura desacoplada frontend-backend.
+1. Crea una base PostgreSQL y ejecuta, en orden, `db/schema.sql` y `db/seed.sql`.
+2. Copia `.env.example` a `backend/.env` y completa las variables. Para desarrollo define `FRONTEND_URL=http://localhost:5500`.
+3. Instala y arranca la API:
 
----
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-## 🛠️ Tecnologías Utilizadas
+4. Sirve `frontend` con un servidor estático en el puerto 5500, por ejemplo:
 
-- **Frontend:** HTML5, CSS3 (Mobile-First, sin frameworks) y JavaScript Vanilla (Fetch API).
-- **Backend:** Node.js, Express.js, JWT (`jsonwebtoken`), Bcrypt.
-- **Base de Datos:** PostgreSQL (consultas parametrizadas y transacciones ACID).
-- **Control de Versiones:** Git & GitHub.
+```bash
+npx serve frontend -l 5500
+```
 
----
+Abre `http://localhost:5500`. Registra una cuenta para probar el flujo. Las cinco organizaciones y campañas son ficticias y están etiquetadas como demo.
 
-## 📂 Estructura del Proyecto
+## Stripe de prueba
 
-```text
-granito/
-├── backend/
-│   ├── src/
-│   │   ├── config/        # Configuración de base de datos
-│   │   ├── controllers/   # Controladores (Auth, Campañas, Donaciones)
-│   │   ├── middlewares/   # Auth Middleware (JWT)
-│   │   ├── routes/        # Rutas de la API REST
-│   │   └── app.js         # Servidor principal Express
-│   ├── .env.example
-│   └── package.json
-├── frontend/
-│   ├── css/
-│   │   └── styles.css     # Estilos globales (Paleta: crema, verde, naranja)
-│   ├── js/
-│   │   ├── api.js         # Cliente Fetch para consumir la API
-│   │   └── main.js        # Lógica de UI y renderizado dinámico
-│   └── index.html         # Vista principal
-├── database/
-│   └── schema.sql         # Script de creación de tablas y datos semilla
-└── README.md
+- Configura `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` en `backend/.env`.
+- En otra terminal: `stripe listen --forward-to localhost:3000/api/stripe/webhook` y usa el secreto que imprime.
+- Para Checkout usa la tarjeta `4242 4242 4242 4242`, cualquier fecha futura, CVC y código postal.
+- El saldo se acredita exclusivamente tras el evento `checkout.session.completed` firmado. El regreso a la página no acredita pagos.
+
+## Despliegue
+
+- Backend: Render, con `npm start`, las variables del `.env.example` y `FRONTEND_URL` apuntando al sitio final.
+- Frontend: Netlify o Vercel como sitio estático. Antes de desplegar, reemplaza la URL local de `frontend/js/api.js` por `https://tu-backend/api`.
+- En Stripe, registra `https://tu-backend/api/stripe/webhook` como endpoint de webhook.
+
+No subas archivos `.env` ni llaves de Stripe. Antes de una demo en Render gratuito, abre `/api/health` para calentar el servicio.
